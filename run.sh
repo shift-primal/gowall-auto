@@ -1,25 +1,82 @@
 #!/bin/bash
 
-INPUT_DIR="./src/input"
-OUTPUT_DIR="./src/output"
-TEMP_DIR="./src/processing"
+set -e
 
-mkdir -p "$INPUT_DIR"
-mkdir -p "$TEMP_DIR"
+INPUT_DIR="./input"
+OUTPUT_DIR="./output"
+ORIGINALS_DIR="./originals"
+
+VALID_THEMES=(
+  "arcdark" "atomdark" "cat-frappe" "cat-latte" "catppuccin" "cyberpunk"
+  "dracula" "everforest" "github-light" "gruvbox" "kanagawa" "material"
+  "melange-dark" "melange-light" "monokai" "night-owl" "nord" "oceanic-next"
+  "onedark" "palenight" "rose-pine" "shades-of-purple" "solarized" "srcery"
+  "sunset-aurant" "sunset-saffron" "sunset-tangerine" "synthwave-84"
+  "tokyo-dark" "tokyo-moon" "tokyo-storm"
+)
+
+usage() {
+  echo "Usage: $0 -t <theme>"
+  echo ""
+  echo "Valid themes:"
+  printf '  %s\n' "${VALID_THEMES[@]}"
+  exit 1
+}
+
+validate_theme() {
+  local theme="$1"
+  for valid in "${VALID_THEMES[@]}"; do
+    if [[ "$valid" == "$theme" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+THEME=""
+while getopts "t:h" opt; do
+  case $opt in
+  t) THEME="$OPTARG" ;;
+  h) usage ;;
+  *) usage ;;
+  esac
+done
+
+if [[ -z "$THEME" ]]; then
+  echo "Error: Theme is required"
+  usage
+fi
+
+if ! validate_theme "$THEME"; then
+  echo "Error: Invalid theme '$THEME'"
+  echo ""
+  echo "Valid themes:"
+  printf '  %s\n' "${VALID_THEMES[@]}"
+  exit 1
+fi
+
+if [[ ! -d "$INPUT_DIR" ]] || [[ -z "$(ls -A "$INPUT_DIR" 2>/dev/null)" ]]; then
+  echo "Error: No files found in $INPUT_DIR"
+  exit 1
+fi
+
 mkdir -p "$OUTPUT_DIR"
+mkdir -p "$ORIGINALS_DIR"
 
+echo "==> Processing images with theme '$THEME'..."
 for pic in "$INPUT_DIR"/*; do
   [[ -e "$pic" ]] || continue
   filename=$(basename "$pic")
-  new_location="$TEMP_DIR/$filename"
+  name="${filename%.*}"
+  output_file="$OUTPUT_DIR/$name.png"
 
-  echo "Moving $pic to temp folder..."
-  mv "$pic" "$TEMP_DIR"
+  echo "  Processing: $filename -> $name.png"
+  gowall convert "$pic" --format png --theme "$THEME" --output "$output_file"
+
+  mv "$pic" "$ORIGINALS_DIR/"
 done
 
-# move all images to another folder (./processing/)
-# convert all images to png
-# move all originals to another folder (./processed/)
-# convert all images to colorscheme
-# move all completed to ./output/
-# delete all temporary photos
+echo ""
+echo "Done!"
+echo "  Themed images: $OUTPUT_DIR"
+echo "  Originals moved to: $ORIGINALS_DIR"
