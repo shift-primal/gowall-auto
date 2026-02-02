@@ -16,7 +16,11 @@ VALID_THEMES=(
 )
 
 usage() {
-  echo "Usage: $0 -t <theme>"
+  echo "Usage: $0 -t <theme> [-f <format>]"
+  echo ""
+  echo "Options:"
+  echo "  -t <theme>   Color scheme to apply (required)"
+  echo "  -f <format>  Output format: png, jpg, webp (default: png)"
   echo ""
   echo "Valid themes:"
   printf '  %s\n' "${VALID_THEMES[@]}"
@@ -34,13 +38,20 @@ validate_theme() {
 }
 
 THEME=""
-while getopts "t:h" opt; do
+FORMAT="png"
+while getopts "t:f:h" opt; do
   case $opt in
   t) THEME="$OPTARG" ;;
+  f) FORMAT="$OPTARG" ;;
   h) usage ;;
   *) usage ;;
   esac
 done
+
+if [[ ! "$FORMAT" =~ ^(png|jpg|jpeg|webp)$ ]]; then
+  echo "Error: Invalid format '$FORMAT'. Use png, jpg, or webp."
+  exit 1
+fi
 
 if [[ -z "$THEME" ]]; then
   echo "Error: Theme is required"
@@ -63,15 +74,15 @@ fi
 mkdir -p "$OUTPUT_DIR"
 mkdir -p "$ORIGINALS_DIR"
 
-echo "==> Processing images with theme '$THEME'..."
+echo "==> Processing images with theme '$THEME' (format: $FORMAT)..."
 for pic in "$INPUT_DIR"/*; do
   [[ -e "$pic" ]] || continue
   filename=$(basename "$pic")
   name="${filename%.*}"
-  output_file="$OUTPUT_DIR/$name.png"
+  output_file="$OUTPUT_DIR/$name.$FORMAT"
 
-  echo "  Processing: $filename -> $name.png"
-  gowall convert "$pic" --format png --theme "$THEME" --output "$output_file"
+  echo "  Processing: $filename -> $name.$FORMAT"
+  gowall convert "$pic" --format "$FORMAT" --theme "$THEME" --output "$output_file"
 
   mv "$pic" "$ORIGINALS_DIR/"
 done

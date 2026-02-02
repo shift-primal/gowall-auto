@@ -1,6 +1,6 @@
 # gowall-auto
 
-Batch convert images to a color scheme using [gowall](https://github.com/Achno/gowall).
+Batch convert images to a single file extension and color scheme using [gowall](https://github.com/Achno/gowall)
 
 ## Requirements
 
@@ -11,10 +11,13 @@ Batch convert images to a color scheme using [gowall](https://github.com/Achno/g
 1. Put your images in `input/`
 2. Run the script with a theme:
    ```bash
-   ./run.sh -t <theme>
+   ./run.sh -t <theme> [-f <format>]
    ```
-3. Find themed PNGs in `output/`
-4. Originals are moved to `originals/`
+
+   - `-t <theme>` - Color scheme to apply (required)
+   - `-f <format>` - Output format: `png`, `jpg`, `webp` (default: `png`)
+3. Find themed images in `output/`
+4. Original images are moved to `originals/`
 
 ## Themes
 
@@ -31,8 +34,9 @@ tokyo-dark      tokyo-moon      tokyo-storm
 
 Run `./run.sh -h` to see all themes.
 
-## Example
+## Examples
 
 ```bash
 ./run.sh -t dracula
+./run.sh -t nord -f webp
 ```
